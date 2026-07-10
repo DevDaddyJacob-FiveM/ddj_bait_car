@@ -1,5 +1,57 @@
 # Bait Car
-TBD
+Turn any vehicle into a police bait car. Fit a car with the bait car gear, then
+use the handheld remote to remotely kill its engine, lock the doors, flash the
+lights, set off the alarm and track its location once a thief takes off in it.
+
+Other resources can hook into a bait car through a small set of exports, so
+things like engine-idle scripts know to back off the moment the operator kills
+the bait car.
+
+### Features
+- **Installable gear** – a car must have the bait car gear fitted before it can
+  be controlled. Gear state is stored on the vehicle and synced to everyone.
+- **Handheld remote UI** – an in-game key-fob styled remote with buttons for the
+  bait car's controls. Cycle between every bait car in range and see each unit's
+  live status.
+- **Remote controls** – a POWER toggle that kills the engine and locks the doors
+  together, plus separate door locks, light flash, alarm and locate buttons.
+- **Exports** – let other resources read a bait car's state (see below).
+
+### Usage
+| Action | Default |
+|---|---|
+| Open the remote | `F7` (or `/baitcar`) |
+| Install gear on the vehicle you're in / nearest | `/installbaitcar` |
+| Remove gear | `/uninstallbaitcar` |
+
+The default keybind and the ranges can be changed in
+[config.lua](./config.lua); the keybind itself can also be rebound in the FiveM
+settings.
+
+### Exports
+Both the client and server expose the same read helpers (pass a vehicle entity
+handle):
+
+```lua
+-- Is the gear installed on this vehicle?
+exports["ddj_bait_car"]:isBaitCar(vehicle)
+
+-- Has the operator remotely killed the engine? This is the signal an
+-- engine-idle / "keep engine running" resource should check before it keeps a
+-- bait car running.
+if exports["ddj_bait_car"]:isEngineDisabled(vehicle) then
+    return -- don't fight the bait car operator
+end
+
+exports["ddj_bait_car"]:areDoorsLocked(vehicle)
+exports["ddj_bait_car"]:getBaitCarState(vehicle)
+```
+
+The client also exposes a helper to grab the closest bait car:
+
+```lua
+local vehicle, netId = exports["ddj_bait_car"]:getNearestBaitCar(50.0)
+```
 
 ### Dependencies
 - [ddj_lib](https://github.com/DevDaddyJacob-FiveM/ddj_lib)

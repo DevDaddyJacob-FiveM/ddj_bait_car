@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>ddj_bait_car remote</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="remote" class="remote hidden">
+        <div class="fob">
+            <div class="fob__body">
+                <div class="fob__head">
+                    <span class="fob__brand">DDJ</span>
+                    <div class="fob__head-right">
+                        <span id="fob-led" class="fob__led"></span>
+                        <button id="btn-close" class="fob__close" data-action="close" title="Close (ESC)">&times;</button>
+                    </div>
+                </div>
+
+                <!-- LCD readout -->
+                <div class="lcd">
+                    <div class="lcd__screen">
+                        <div class="lcd__meta">
+                            <span>UNIT</span>
+                            <span id="scr-index">0 / 0</span>
+                        </div>
+                        <div id="scr-model" class="lcd__model">NO UNITS</div>
+                        <div id="scr-plate" class="lcd__plate">&mdash;</div>
+                    </div>
+                </div>
+
+                <!-- Slim unit selector -->
+                <div class="nav">
+                    <button class="nav__btn" data-action="prev">&#9664;</button>
+                    <button class="nav__btn" data-action="next">&#9654;</button>
+                </div>
+
+                <!-- Button cluster -->
+                <div class="pad">
+                    <button class="btn key" data-action="doors">
+                        <span class="btn__icon">&#128274;</span>
+                        <span class="btn__label">LOCKS</span>
+                    </button>
+                    <button class="btn" data-action="locate">
+                        <span class="btn__icon">&#128205;</span>
+                        <span class="btn__label">LOCATE</span>
+                    </button>
+                    <button class="btn" data-action="alarm">
+                        <span class="btn__icon">&#128680;</span>
+                        <span class="btn__label">ALARM</span>
+                    </button>
+                    <button class="btn" data-action="flash">
+                        <span class="btn__icon">&#128161;</span>
+                        <span class="btn__label">LIGHTS</span>
+                    </button>
+                </div>
+
+                <!-- Full width power toggle: kills engine + locks doors -->
+                <button class="btn power key key--power" data-action="power">
+                    <span class="btn__label">POWER</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>

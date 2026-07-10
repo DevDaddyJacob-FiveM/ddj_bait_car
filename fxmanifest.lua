@@ -15,13 +15,17 @@ ui_page "nui/index.html"
 
 files {
 	"nui/index.html",
+	"nui/style.css",
+	"nui/index.js",
 }
 
 shared_scripts {
+	"@ddj_lib/shared/logging.lua",
 	"config.lua",
 }
 
 client_scripts {
+	"client/utils.lua",
 	"client/main.lua",
 }
 
