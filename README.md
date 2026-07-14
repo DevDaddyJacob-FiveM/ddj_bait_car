@@ -21,8 +21,8 @@ the bait car.
 | Action | Default |
 |---|---|
 | Open the remote | `F7` (or `/baitcar`) |
-| Install gear on the vehicle you're in / nearest | `/installbaitcar` |
-| Remove gear | `/uninstallbaitcar` |
+| Install gear on the vehicle you're in / nearest | `/baitcar install` |
+| Remove gear | `/baitcar uninstall` |
 
 The default keybind and the ranges can be changed in
 [config.lua](./config.lua); the keybind itself can also be rebound in the FiveM

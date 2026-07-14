@@ -4,13 +4,13 @@
 // than hard-coding it.
 const RESOURCE = window.location.hostname.replace(/^cfx-nui-/, "");
 
-const remoteEl = document.getElementById("remote");
-const fobEl = document.querySelector(".fob");
-const scrIndex = document.getElementById("scr-index");
-const scrModel = document.getElementById("scr-model");
-const scrPlate = document.getElementById("scr-plate");
-const keyPower = document.querySelector('.key[data-action="power"]');
-const keyDoors = document.querySelector('.key[data-action="doors"]');
+const remoteElem = document.getElementById("remote");
+const fobElem = document.querySelector(".fob");
+const lcdIndexElem = document.getElementById("lcd-index");
+const lcdModelElem = document.getElementById("lcd-model");
+const lcdPlateElem = document.getElementById("lcd-plate");
+const btnPowerElem = document.querySelector('.btn[data-action="power"]');
+const btnDoorsElem = document.querySelector('.btn[data-action="doors"]');
 
 function sendAction(action) {
     fetch("https://" + RESOURCE + "/baitcar:action", {
@@ -23,33 +23,33 @@ function sendAction(action) {
 }
 
 function open() {
-    remoteEl.classList.remove("hidden");
+    remoteElem.classList.remove("hidden");
 }
 
 function close() {
-    remoteEl.classList.add("hidden");
+    remoteElem.classList.add("hidden");
 }
 
 function renderEmpty() {
-    fobEl.classList.add("fob--disabled");
-    scrIndex.textContent = "0 / 0";
-    scrModel.textContent = "NO UNITS";
-    scrPlate.innerHTML = "&mdash;";
-    keyPower.classList.remove("key--active");
-    keyDoors.classList.remove("key--active");
+    fobElem.classList.add("fob-disabled");
+    lcdIndexElem.textContent = "0 / 0";
+    lcdModelElem.textContent = "NO UNITS";
+    lcdPlateElem.innerHTML = "&mdash;";
+    btnPowerElem.classList.remove("btn-active");
+    btnDoorsElem.classList.remove("btn-active");
 }
 
 function renderStatus(msg) {
-    fobEl.classList.remove("fob--disabled");
+    fobElem.classList.remove("fob-disabled");
 
     const car = msg.car || {};
-    scrIndex.textContent = (msg.index || 0) + " / " + (msg.total || 0);
-    scrModel.textContent = car.model || "UNKNOWN";
-    scrPlate.textContent = car.plate && car.plate.length ? car.plate : "NO PLATE";
+    lcdIndexElem.textContent = (msg.index || 0) + " / " + (msg.total || 0);
+    lcdModelElem.textContent = car.model || "UNKNOWN";
+    lcdPlateElem.textContent = car.plate && car.plate.length ? car.plate : "NO PLATE";
 
     // POWER reflects the engine being killed; LOCKS reflects the door state.
-    keyPower.classList.toggle("key--active", car.engineDisabled === true);
-    keyDoors.classList.toggle("key--active", car.doorsLocked === true);
+    btnPowerElem.classList.toggle("btn-active", car.engineDisabled === true);
+    btnDoorsElem.classList.toggle("btn-active", car.doorsLocked === true);
 }
 
 window.addEventListener("message", function (event) {
@@ -59,12 +59,15 @@ window.addEventListener("message", function (event) {
         case "open":
             open();
             break;
+
         case "close":
             close();
             break;
+
         case "status":
             renderStatus(msg);
             break;
+            
         case "empty":
             renderEmpty();
             break;

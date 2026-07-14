@@ -23,19 +23,34 @@ html, body {
     bottom: 3vh;
 }
 
-/* ---- Fob body ---------------------------------------------------------- */
+
+
+.fob-disabled .pad,
+.fob-disabled .power,
+.fob-disabled .nav {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+
+
+
 .fob {
     position: relative;
     width: 205px;
     filter: drop-shadow(0 22px 26px rgba(0, 0, 0, 0.6));
 }
 
-.fob__body {
+.fob-body {
     position: relative;
     padding: 14px 16px 20px;
     border-radius: 34px / 40px;
-    background:
-        linear-gradient(155deg, #33373d 0%, #212429 40%, #16181c 100%);
+    background: linear-gradient(
+        155deg,
+        #33373d 0%,
+        #212429 40%,
+        #16181c 100%
+    );
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow:
         inset 0 2px 1px rgba(255, 255, 255, 0.12),
@@ -43,14 +58,21 @@ html, body {
         inset 0 0 0 6px rgba(0, 0, 0, 0.18);
 }
 
-.fob__head {
+
+.fob-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 2px 12px;
 }
 
-.fob__brand {
+.fob-head-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fob-brand {
     font-size: 14px;
     font-weight: 800;
     letter-spacing: 3px;
@@ -58,14 +80,8 @@ html, body {
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
 }
 
-.fob__head-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
 
-/* Blinking status LED */
-.fob__led {
+.fob-led {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -79,7 +95,7 @@ html, body {
     55%, 100% { opacity: 0.15; }
 }
 
-.fob__close {
+.fob-close {
     width: 20px;
     height: 20px;
     border: none;
@@ -93,24 +109,30 @@ html, body {
     transition: background 0.15s ease, color 0.15s ease;
 }
 
-.fob__close:hover {
+.fob-close:hover {
     background: #b53636;
     color: #fff;
 }
 
-/* ---- LCD readout ------------------------------------------------------- */
+
+
+
 .lcd {
     margin-bottom: 10px;
 }
 
-.lcd__screen {
+.lcd-screen {
     display: flex;
     flex-direction: column;
     justify-content: center;
     min-height: 88px;
     padding: 12px 14px;
     border-radius: 10px;
-    background: radial-gradient(120% 130% at 50% 0%, #123a24 0%, #06170e 100%);
+    background: radial-gradient(
+        120% 130% at 50% 0%,
+        #123a24 0%,
+        #06170e 100%
+    );
     box-shadow:
         inset 0 0 16px rgba(0, 0, 0, 0.7),
         inset 0 0 0 1px rgba(120, 255, 170, 0.14);
@@ -119,7 +141,7 @@ html, body {
     overflow: hidden;
 }
 
-.lcd__meta {
+.lcd-meta {
     display: flex;
     justify-content: space-between;
     font-size: 10px;
@@ -128,33 +150,36 @@ html, body {
     margin-bottom: 8px;
 }
 
-.lcd__model {
+.lcd-model {
     font-size: 15px;
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.5px;
     text-shadow: 0 0 8px rgba(125, 255, 176, 0.4);
+    
     /* Always a single line; overflow is truncated with an ellipsis */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.lcd__plate {
+.lcd-plate {
     font-size: 12px;
     letter-spacing: 1px;
     color: #4fbf82;
     margin-top: 6px;
 }
 
-/* ---- Slim unit selector ------------------------------------------------ */
+
+
+
 .nav {
     display: flex;
     gap: 8px;
     margin-bottom: 14px;
 }
 
-.nav__btn {
+.nav-btn {
     flex: 1;
     padding: 5px 0;
     border: none;
@@ -167,12 +192,14 @@ html, body {
     transition: color 0.15s ease, background 0.15s ease;
 }
 
-.nav__btn:hover {
+.nav-btn:hover {
     color: #e8eaed;
     background: rgba(0, 0, 0, 0.5);
 }
 
-/* ---- Button cluster ---------------------------------------------------- */
+
+
+
 .pad {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -191,19 +218,31 @@ html, body {
     border-radius: 16px;
     cursor: pointer;
     color: #dfe3e8;
-    background: linear-gradient(180deg, #4a5058 0%, #2c3037 55%, #212429 100%);
+    background: linear-gradient(
+        180deg,
+        #4a5058 0%,
+        #2c3037 55%,
+        #212429 100%
+    );
     box-shadow:
-        0 3px 0 #101214,               /* the raised "key travel" edge */
+        0 3px 0 #101214,
         0 5px 8px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.15s ease;
+    transition:
+        transform 0.05s ease,
+        box-shadow 0.05s ease,
+        background 0.15s ease;
 }
 
 .btn:hover {
-    background: linear-gradient(180deg, #545b64 0%, #34383f 55%, #262a30 100%);
+    background: linear-gradient(
+        180deg,
+        #545b64 0%,
+        #34383f 55%,
+        #262a30 100%
+    );
 }
 
-/* Press the physical key down */
 .btn:active {
     transform: translateY(3px);
     box-shadow:
@@ -212,79 +251,96 @@ html, body {
         inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.btn__icon {
+.btn-icon {
     font-size: 20px;
     line-height: 1;
 }
 
-.btn__label {
+.btn-label {
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 1px;
 }
 
-/* Active (engaged) toggles glow */
-.key--active {
-    background: linear-gradient(180deg, #35a869 0%, #1f7a48 55%, #165c36 100%);
+
+.btn.btn-active {
+    background: linear-gradient(
+        180deg,
+        #35a869 0%,
+        #1f7a48 55%,
+        #165c36 100%
+    );
     box-shadow:
         0 3px 0 #0c3a22,
         0 5px 10px rgba(40, 200, 120, 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-.key--active:hover {
-    background: linear-gradient(180deg, #2b8a56 0%, #15663a 55%, #104b2a 100%);
+.btn.btn-active:hover {
+    background: linear-gradient(
+        180deg,
+        #2b8a56 0%,
+        #15663a 55%,
+        #104b2a 100%
+    );
     box-shadow:
         0 3px 0 #0c3a22,
         0 5px 10px rgba(40, 200, 120, 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-/* ---- Full width power toggle ------------------------------------------- */
-.power {
+
+
+.btn-power {
     width: 100%;
     flex-direction: row;
     gap: 12px;
     padding: 15px 0;
 }
 
-.power .btn__icon {
+.btn-power .btn-icon {
     font-size: 18px;
 }
 
-.power .btn__label {
+.btn-power .btn-label {
     font-size: 13px;
     letter-spacing: 2px;
 }
 
-/* Red base at rest */
-.btn.key--power {
+.btn.btn-power {
     color: #ffe1e1;
-    background: linear-gradient(180deg, #bf4749 0%, #8f2e30 55%, #6e2122 100%);
+    background: linear-gradient(
+        180deg,
+        #bf4749 0%,
+        #8f2e30 55%,
+        #6e2122 100%
+    );
     box-shadow:
         0 3px 0 #3f1010,
         0 5px 8px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.btn.key--power:hover {
-    background: linear-gradient(180deg, #a7383a 0%, #6b1819 55%, #5f1417 100%);
+.btn.btn-power:hover {
+    background: linear-gradient(
+        180deg,
+        #a7383a 0%,
+        #6b1819 55%,
+        #5f1417 100%
+    );
 }
 
 /* Brighter with a red glow when engaged */
-.btn.key--power.key--active {
-    background: linear-gradient(180deg, #ff5f5f 0%, #d84242 55%, #af3232 100%);
+.btn.btn-power.btn-active {
+    background: linear-gradient(
+        180deg,
+        #ff5f5f 0%,
+        #d84242 55%,
+        #af3232 100%
+    );
     box-shadow:
         0 3px 0 #4d1212,
         0 0 16px 2px rgba(255, 70, 70, 0.6),
         0 5px 10px rgba(255, 70, 70, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.28);
-}
-
-/* ---- Disabled (no units) ---------------------------------------------- */
-.fob--disabled .pad,
-.fob--disabled .power,
-.fob--disabled .nav {
-    opacity: 0.4;
-    pointer-events: none;
 }

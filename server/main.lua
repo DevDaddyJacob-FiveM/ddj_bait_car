@@ -1,6 +1,3 @@
---[[
-    Resolves a networked vehicle id to a live server entity handle, or `nil`.
-]]
 local function getVehicle(vehNetId)
     if nil == vehNetId then
         return nil
@@ -20,10 +17,6 @@ local function getState(entity)
 end
 
 
---[[
-    Writes a fresh, replicated bait car state onto the vehicle. Passing `nil`
-    clears the gear entirely.
-]]
 local function setState(entity, newState)
     Entity(entity).state:set("baitCar", newState, true)
 end
@@ -54,7 +47,7 @@ RegisterNetEvent("DevJacob:BaitCar:Server:Install", function(vehNetId)
         doorsLocked = false,
     })
 
-    logger:info("player %s installed bait car gear on net id %s", tostring(source), tostring(vehNetId))
+    logger:info("player %d installed bait car gear on net id %d", source, vehNetId)
     notify(source, "success", "Bait car gear installed")
 end)
 
@@ -75,7 +68,7 @@ RegisterNetEvent("DevJacob:BaitCar:Server:Uninstall", function(vehNetId)
 
     setState(entity, nil)
 
-    logger:info("player %s removed bait car gear from net id %s", tostring(source), tostring(vehNetId))
+    logger:info("player %s removed bait car gear from net id %d", source, vehNetId)
     notify(source, "success", "Bait car gear removed")
 end)
 
@@ -113,12 +106,7 @@ RegisterNetEvent("DevJacob:BaitCar:Server:SetControl", function(vehNetId, contro
 
     setState(entity, newState)
 
-    logger:debug(
-        "net id %s control %s set to %s",
-        tostring(vehNetId),
-        tostring(control),
-        tostring(value)
-    )
+    logger:debug("net id %s control %s set to %s", vehNetId, control, tostring(value))
 end)
 
 

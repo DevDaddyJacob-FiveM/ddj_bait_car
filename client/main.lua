@@ -1,16 +1,3 @@
-local remoteOpen = false
-local remoteCars = {}
-local remoteIndex = 1
-
-
---[[ ------------------------------------------------------------------------
-    Effect enforcement
-
-    The client which owns a bait car entity is responsible for physically
-    applying the remote controlled state (engine killed / doors locked) to it.
-    We both react to statebag changes for a snappy response and sweep on a
-    thread so that ownership migrations are picked up.
---------------------------------------------------------------------------- ]]
 local function applyBaitCarEffects(vehicle)
     if not isBaitCar(vehicle) then
         return
@@ -52,8 +39,8 @@ AddStateBagChangeHandler("baitCar", nil, function(bagName, _key, _value, _reserv
 
     applyBaitCarEffects(vehicle)
 
-    if remoteOpen then
-        pushRemoteStatus()
+    if nui.isOpen then
+        updateRemote()
     end
 end)
 
@@ -70,10 +57,6 @@ Citizen.CreateThread(function()
 end)
 
 
---[[ ------------------------------------------------------------------------
-    Momentary actions (alarm / lights) routed to us by the server because we
-    own the entity.
---------------------------------------------------------------------------- ]]
 RegisterNetEvent("DevJacob:BaitCar:Client:Momentary", function(vehNetId, action)
     if not NetworkDoesNetworkIdExist(vehNetId) then
         return
@@ -87,7 +70,11 @@ RegisterNetEvent("DevJacob:BaitCar:Client:Momentary", function(vehNetId, action)
     if "alarm" == action then
         SetVehicleAlarm(vehicle, true)
         StartVehicleAlarm(vehicle)
-    elseif "flash" == action then
+
+        return
+    end
+
+    if "flash" == action then
         Citizen.CreateThread(function()
             for _ = 1, 4 do
                 SetVehicleLights(vehicle, 2)
@@ -98,6 +85,8 @@ RegisterNetEvent("DevJacob:BaitCar:Client:Momentary", function(vehNetId, action)
 
             SetVehicleLights(vehicle, 0)
         end)
+
+        return
     end
 end)
 
@@ -107,56 +96,6 @@ RegisterNetEvent("DevJacob:BaitCar:Client:Notify", function(_kind, message)
 end)
 
 
---[[ ------------------------------------------------------------------------
-    The remote UI
---------------------------------------------------------------------------- ]]
-function pushRemoteStatus()
-    local car = remoteCars[remoteIndex]
-    if nil == car then
-        SendNUIMessage({ action = "empty" })
-        return
-    end
-
-    local vehicle = NetToVeh(car.netId)
-    local state = getBaitCarState(vehicle)
-
-    SendNUIMessage({
-        action = "status",
-        index = remoteIndex,
-        total = #remoteCars,
-        car = {
-            model = car.model,
-            plate = car.plate,
-            installed = nil ~= state and true == state.installed,
-            engineDisabled = nil ~= state and true == state.engineDisabled,
-            doorsLocked = nil ~= state and true == state.doorsLocked,
-        },
-    })
-end
-
-
-function openRemote()
-    if remoteOpen then
-        closeRemote()
-        return
-    end
-
-    remoteCars = collectBaitCars()
-    remoteIndex = 1
-    remoteOpen = true
-
-    SetNuiFocus(true, true)
-    SendNUIMessage({ action = "open" })
-    pushRemoteStatus()
-end
-
-
-function closeRemote()
-    remoteOpen = false
-    SetNuiFocus(false, false)
-    SendNUIMessage({ action = "close" })
-end
-
 
 -- Keep the remote's readout in sync while it is open, since control changes
 -- take a round trip through the server before the statebag updates.
@@ -164,88 +103,70 @@ Citizen.CreateThread(function()
     while true do
         Citizen.Wait(400)
 
-        if remoteOpen then
-            pushRemoteStatus()
+        if nui.isOpen then
+            updateRemote()
         end
     end
 end)
 
 
-local function selectedNetId()
-    local car = remoteCars[remoteIndex]
-    if nil == car then
-        return nil
+local function resolveGearTarget()
+    local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+
+    if 0 == vehicle then
+        vehicle = getNearestVehicle(Config["InstallDistance"])
     end
 
-    return car.netId
+    return vehicle
 end
 
 
-RegisterNUICallback("baitcar:action", function(data, cb)
-    local action = data.action
+local function baitcarUninstallCommand()
+    local vehicle = resolveGearTarget()
 
-    if "close" == action then
-        closeRemote()
-
-    elseif "next" == action then
-        if #remoteCars > 0 then
-            remoteIndex = (remoteIndex % #remoteCars) + 1
-            pushRemoteStatus()
-        end
-
-    elseif "prev" == action then
-        if #remoteCars > 0 then
-            remoteIndex = ((remoteIndex - 2) % #remoteCars) + 1
-            pushRemoteStatus()
-        end
-
-    elseif "refresh" == action then
-        remoteCars = collectBaitCars()
-        remoteIndex = 1
-        pushRemoteStatus()
-
-    elseif "locate" == action then
-        local netId = selectedNetId()
-        if nil ~= netId and NetworkDoesNetworkIdExist(netId) then
-            local coords = GetEntityCoords(NetToVeh(netId))
-            SetNewWaypoint(coords.x, coords.y)
-            notify("Waypoint set to bait car")
-        end
-
-    elseif "power" == action or "doors" == action then
-        local netId = selectedNetId()
-        if nil ~= netId then
-            local state = getBaitCarState(NetToVeh(netId))
-
-            -- POWER tracks the engine state (it kills the engine and locks the
-            -- doors together); LOCKS tracks the doors on their own.
-            local current = false
-            if "power" == action then
-                current = nil ~= state and true == state.engineDisabled
-            else
-                current = nil ~= state and true == state.doorsLocked
-            end
-
-            -- The button name doubles as the control name ("power" / "doors").
-            TriggerServerEvent("DevJacob:BaitCar:Server:SetControl", netId, action, not current)
-        end
-
-    elseif "flash" == action or "alarm" == action then
-        local netId = selectedNetId()
-        if nil ~= netId then
-            TriggerServerEvent("DevJacob:BaitCar:Server:Momentary", netId, action)
-        end
+    if 0 == vehicle or not DoesEntityExist(vehicle) then
+        notify("No vehicle nearby to remove the bait car gear from")
+        return
     end
 
-    cb({ ok = true })
-end)
+    if not isBaitCar(vehicle) then
+        notify("This vehicle does not have bait car gear installed")
+        return
+    end
+
+    TriggerServerEvent("DevJacob:BaitCar:Server:Uninstall", VehToNet(vehicle))
+end
 
 
---[[ ------------------------------------------------------------------------
-    Commands & keybinds
---------------------------------------------------------------------------- ]]
-RegisterCommand("baitcar", function()
-    openRemote()
+local function baitcarInstallCommand()
+    local vehicle = resolveGearTarget()
+
+    if 0 == vehicle or not DoesEntityExist(vehicle) then
+        notify("No vehicle nearby to install the bait car gear on")
+        return
+    end
+
+    if isBaitCar(vehicle) then
+        notify("This vehicle already has bait car gear installed")
+        return
+    end
+
+    TriggerServerEvent("DevJacob:BaitCar:Server:Install", VehToNet(vehicle))
+end
+
+
+RegisterCommand("baitcar", function(p1, args, p3)
+    if 0 < #args and "uninstall" == args[1] then
+        baitcarUninstallCommand()
+        return
+    end
+
+    if 0 < #args and "install" == args[1] then
+        baitcarInstallCommand()
+        return
+    end
+
+    nui:open()
 end, false)
 
 if
@@ -261,67 +182,26 @@ then
 end
 
 
-local function resolveGearTarget()
-    local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
-
-    if 0 == vehicle then
-        vehicle = getNearestVehicle(Config["InstallDistance"])
-    end
-
-    return vehicle
-end
-
-
-RegisterCommand("installbaitcar", function()
-    local vehicle = resolveGearTarget()
-
-    if 0 == vehicle or not DoesEntityExist(vehicle) then
-        notify("No vehicle nearby to install the bait car gear on")
-        return
-    end
-
-    if isBaitCar(vehicle) then
-        notify("This vehicle already has bait car gear installed")
-        return
-    end
-
-    TriggerServerEvent("DevJacob:BaitCar:Server:Install", VehToNet(vehicle))
-end, false)
-
-
-RegisterCommand("uninstallbaitcar", function()
-    local vehicle = resolveGearTarget()
-
-    if 0 == vehicle or not DoesEntityExist(vehicle) then
-        notify("No vehicle nearby to remove the bait car gear from")
-        return
-    end
-
-    if not isBaitCar(vehicle) then
-        notify("This vehicle does not have bait car gear installed")
-        return
-    end
-
-    TriggerServerEvent("DevJacob:BaitCar:Server:Uninstall", VehToNet(vehicle))
-end, false)
+RegisterCommand("baitcar install", function() /* no-op */ end, false)
+RegisterCommand("baitcar uninstall", function() /* no-op */ end, false)
 
 
 -- Make sure focus is released if the resource is stopped while the remote is
 -- open, otherwise the player would be stuck with a locked cursor.
 AddEventHandler("onResourceStop", function(resourceName)
-    if GetCurrentResourceName() == resourceName and remoteOpen then
+    if GetCurrentResourceName() == resourceName and nui.isOpen then
         SetNuiFocus(false, false)
     end
 end)
 
 
---[[ ------------------------------------------------------------------------
-    Exports for other resources to hook into.
+--[[
+    Exports for external resources to hook into.
 
     The headline use case: a resource that keeps engines running should skip
     any vehicle where `isEngineDisabled` returns true, so it does not fight the
     operator who has killed the bait car.
---------------------------------------------------------------------------- ]]
+]]
 exports("isBaitCar", function(vehicle)
     return isBaitCar(vehicle)
 end)
