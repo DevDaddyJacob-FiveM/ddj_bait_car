@@ -110,6 +110,22 @@ RegisterNetEvent("DevJacob:BaitCar:Server:SetControl", function(vehNetId, contro
 end)
 
 
+--[[
+    Lets the client fetch a bait car's state by net id when its entity is no
+    longer streamed in locally (e.g. the operator is far away), so the
+    remote can keep showing an accurate readout instead of going blank.
+]]
+rpc.register("DevJacob:BaitCar:Server:GetState", function(source, cb, vehNetId)
+    local entity = getVehicle(vehNetId)
+    if nil == entity then
+        cb(nil)
+        return
+    end
+
+    cb(getState(entity))
+end)
+
+
 RegisterNetEvent("DevJacob:BaitCar:Server:Momentary", function(vehNetId, action)
     local entity = getVehicle(vehNetId)
     if nil == entity then

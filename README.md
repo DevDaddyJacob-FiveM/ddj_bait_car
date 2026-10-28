@@ -54,7 +54,7 @@ local vehicle, netId = exports["ddj_bait_car"]:getNearestBaitCar(50.0)
 ```
 
 ### Dependencies
-- [ddj_lib](https://github.com/DevDaddyJacob-FiveM/ddj_lib)
+- [ddj_lib (>= v1.2.0)](https://github.com/DevDaddyJacob-FiveM/ddj_lib)
 
 ### Installation
 Installing the resource is simple, just download the latest version from the [releases](https://github.com/DevDaddyJacob-FiveM/ddj_bait_car/releases/latest) tab, place the folder into your FiveM resources folder and then add `ensure ddj_bait_car` to your server.cfg file.

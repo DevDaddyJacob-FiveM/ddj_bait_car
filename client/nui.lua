@@ -52,6 +52,31 @@ function nui:updateStatus(index, total, car)
     })
 end
 
+-- Last known state per net id, used as a fallback when a bait car's entity
+-- is no longer streamed in locally (the operator is too far away for the
+-- game to keep it loaded), so the remote doesn't go blank out of range.
+local remoteStateCache = {}
+local pendingStateRequests = {}
+local STATE_REQUEST_INTERVAL = 1000
+
+local function requestRemoteState(netId)
+    local now = GetGameTimer()
+
+    if nil ~= pendingStateRequests[netId] and STATE_REQUEST_INTERVAL > (now - pendingStateRequests[netId]) then
+        return
+    end
+
+    pendingStateRequests[netId] = now
+
+    rpc.invoke("DevJacob:BaitCar:Server:GetState", function(state)
+        remoteStateCache[netId] = state
+
+        if nui.isOpen then
+            updateRemote()
+        end
+    end, netId)
+end
+
 function updateRemote()
     local car = nui.cars[nui.index]
     if nil == car then
@@ -61,6 +86,11 @@ function updateRemote()
 
     local vehicle = NetToVeh(car.netId)
     local state = getBaitCarState(vehicle)
+
+    if nil == state and (0 == vehicle or not DoesEntityExist(vehicle)) then
+        state = remoteStateCache[car.netId]
+        requestRemoteState(car.netId)
+    end
 
     nui:updateStatus(
         nui.index,

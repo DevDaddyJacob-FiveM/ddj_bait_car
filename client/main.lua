@@ -57,6 +57,30 @@ Citizen.CreateThread(function()
 end)
 
 
+-- Blocks exiting (including bailing out) and being dragged out of a bait
+-- car while its doors are locked. Must poll every frame since disabled
+-- controls only hold for the current tick.
+Citizen.CreateThread(function()
+    while true do
+        if false == Config["PreventExitWhenLocked"] then
+            Citizen.Wait(500)
+        else
+            Citizen.Wait(0)
+
+            local ped = PlayerPedId()
+            local vehicle = GetVehiclePedIsIn(ped, false)
+            local shouldBlock = 0 ~= vehicle and isBaitCar(vehicle) and areDoorsLocked(vehicle)
+
+            SetPedCanBeDraggedOut(ped, not shouldBlock)
+
+            if shouldBlock then
+                DisableControlAction(0, 75, true) -- INPUT_VEH_EXIT
+            end
+        end
+    end
+end)
+
+
 RegisterNetEvent("DevJacob:BaitCar:Client:Momentary", function(vehNetId, action)
     if not NetworkDoesNetworkIdExist(vehNetId) then
         return

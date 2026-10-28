@@ -33,4 +33,12 @@ Config = {
         undriveable so the thief is unable to restart it.
     ]]
     LockEngineWhenDisabled = true,
+
+    --[[
+        When `true`, a ped inside a bait car whose doors are locked is
+        blocked from exiting or being dragged out of it. Set to `false` if
+        your server wants to roll its own logic for this instead (e.g. a
+        separate vehicle lock resource).
+    ]]
+    PreventExitWhenLocked = true,
 }
