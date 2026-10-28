@@ -118,11 +118,12 @@ end)
 rpc.register("DevJacob:BaitCar:Server:GetState", function(source, cb, vehNetId)
     local entity = getVehicle(vehNetId)
     if nil == entity then
-        cb(nil)
+        cb(nil, nil)
         return
     end
 
-    cb(getState(entity))
+    local coords = GetEntityCoords(entity)
+    cb(getState(entity), { x = coords.x, y = coords.y, z = coords.z })
 end)
 
 

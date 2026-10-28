@@ -9,6 +9,7 @@ const fobElem = document.querySelector(".fob");
 const lcdIndexElem = document.getElementById("lcd-index");
 const lcdModelElem = document.getElementById("lcd-model");
 const lcdPlateElem = document.getElementById("lcd-plate");
+const lcdRangeElem = document.getElementById("lcd-range");
 const btnPowerElem = document.querySelector('.btn[data-action="power"]');
 const btnDoorsElem = document.querySelector('.btn[data-action="doors"]');
 
@@ -32,9 +33,11 @@ function close() {
 
 function renderEmpty() {
     fobElem.classList.add("fob-disabled");
+    fobElem.classList.remove("out-of-range");
     lcdIndexElem.textContent = "0 / 0";
     lcdModelElem.textContent = "NO UNITS";
     lcdPlateElem.innerHTML = "&mdash;";
+    lcdRangeElem.classList.add("hidden");
     btnPowerElem.classList.remove("btn-active");
     btnDoorsElem.classList.remove("btn-active");
 }
@@ -50,6 +53,12 @@ function renderStatus(msg) {
     // POWER reflects the engine being killed; LOCKS reflects the door state.
     btnPowerElem.classList.toggle("btn-active", car.engineDisabled === true);
     btnDoorsElem.classList.toggle("btn-active", car.doorsLocked === true);
+
+    // Out of range: keep the unit on screen but lock its controls and flag
+    // the readout red until the operator is back within range.
+    const outOfRange = car.inRange === false;
+    fobElem.classList.toggle("out-of-range", outOfRange);
+    lcdRangeElem.classList.toggle("hidden", !outOfRange);
 }
 
 window.addEventListener("message", function (event) {

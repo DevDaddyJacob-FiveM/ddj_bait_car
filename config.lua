@@ -24,7 +24,11 @@ Config = {
 
     --[[
         The maximum distance (in meters) a bait car may be from the operator
-        to show up as a controllable unit on the remote.
+        for it to be discovered by the remote and to be controllable once
+        selected. A bait car already registered on the remote is never
+        removed for being out of range -- it just shows as out of range
+        and locks its controls until the operator gets back within this
+        distance.
     ]]
     RemoteRange = 300.0,
 

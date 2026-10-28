@@ -3,9 +3,32 @@ nui.isOpen = false
 nui.index = 1
 nui.cars = {}
 
+local function mergeDiscoveredCars(cars)
+    local seen = {}
+    for i = 1, #cars do
+        seen[cars[i].netId] = true
+    end
+
+    local discovered = collectBaitCars()
+    for i = 1, #discovered do
+        local entry = discovered[i]
+
+        if not seen[entry.netId] then
+            cars[#cars + 1] = {
+                netId = entry.netId,
+                model = entry.model,
+                plate = entry.plate,
+            }
+            seen[entry.netId] = true
+        end
+    end
+
+    return cars
+end
+
 function nui:toggle()
     logger:trace("nui:toggle()")
-    
+
     if self.isOpen then
         self:close()
     else
@@ -17,8 +40,11 @@ function nui:open()
     logger:trace("nui:open()")
 
     self.isOpen = true
-    self.cars = collectBaitCars()
-    self.remoteIndex = 1
+    self.cars = mergeDiscoveredCars(self.cars)
+
+    if 0 == #self.cars or self.index > #self.cars then
+        self.index = 1
+    end
 
     SetNuiFocus(true, true)
     SendNUIMessage({ action = "open" })
@@ -59,17 +85,57 @@ local remoteStateCache = {}
 local pendingStateRequests = {}
 local STATE_REQUEST_INTERVAL = 1000
 
+local function removeCarFromList(netId)
+    for i = #nui.cars, 1, -1 do
+        if netId ~= nui.cars[i].netId then
+            goto continue
+        end
+
+        table.remove(nui.cars, i)
+
+        if nui.index > i then
+            nui.index = nui.index - 1
+        end
+
+        if nui.index > #nui.cars then
+            nui.index = math.max(1, #nui.cars)
+        end
+
+        break
+
+        ::continue::
+    end
+end
+
 local function requestRemoteState(netId)
     local now = GetGameTimer()
 
-    if nil ~= pendingStateRequests[netId] and STATE_REQUEST_INTERVAL > (now - pendingStateRequests[netId]) then
+    if 
+        nil ~= pendingStateRequests[netId]
+        and STATE_REQUEST_INTERVAL > (now - pendingStateRequests[netId])
+    then
         return
     end
 
     pendingStateRequests[netId] = now
 
-    rpc.invoke("DevJacob:BaitCar:Server:GetState", function(state)
-        remoteStateCache[netId] = state
+    rpc.invoke("DevJacob:BaitCar:Server:GetState", function(state, coords)
+        if nil == state then
+            -- No longer installed, or the vehicle itself is gone, drop it
+            -- instead of leaving a dead entry the operator actually use.
+            remoteStateCache[netId] = nil
+            removeCarFromList(netId)
+        else
+            local stateCoords = nil
+            if nil ~= coords then
+                stateCoords = vector3(coords.x, coords.y, coords.z)
+            end
+
+            remoteStateCache[netId] = {
+                state = state,
+                coords = stateCoords,
+            }
+        end
 
         if nui.isOpen then
             updateRemote()
@@ -86,11 +152,32 @@ function updateRemote()
 
     local vehicle = NetToVeh(car.netId)
     local state = getBaitCarState(vehicle)
+    local cached = remoteStateCache[car.netId]
+    local dist = nil
+    local streamedIn = 0 ~= vehicle and DoesEntityExist(vehicle)
 
-    if nil == state and (0 == vehicle or not DoesEntityExist(vehicle)) then
-        state = remoteStateCache[car.netId]
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    if streamedIn then
+        dist = #(playerCoords - GetEntityCoords(vehicle))
+
+        if nil == state then
+            removeCarFromList(car.netId)
+            remoteStateCache[car.netId] = nil
+            updateRemote()
+            return
+        end
+    else
+        if nil ~= cached and nil ~= cached.coords then
+            dist = #(playerCoords - cached.coords)
+            state = cached.state
+        end
+
         requestRemoteState(car.netId)
     end
+
+    -- Unknown distance (no cached position yet) is treated as out of range
+    -- so the remote doesn't falsely show a car as controllable.
+    local inRange = nil ~= dist and dist <= Config["RemoteRange"]
 
     nui:updateStatus(
         nui.index,
@@ -101,6 +188,7 @@ function updateRemote()
             installed = nil ~= state and true == state.installed,
             engineDisabled = nil ~= state and true == state.engineDisabled,
             doorsLocked = nil ~= state and true == state.doorsLocked,
+            inRange = inRange,
         }
     )
 end
@@ -174,19 +262,38 @@ RegisterNUICallback("baitcar:action", function(data, cb)
         end,
 
         ["refresh"] = function(_nui, data)
-            _nui.cars = collectBaitCars()
-            _nui.index = 1
+            _nui.cars = mergeDiscoveredCars(_nui.cars)
+
+            if 0 == #_nui.cars or _nui.index > #_nui.cars then
+                _nui.index = 1
+            end
+
             updateRemote()
         end,
 
         ["locate"] = function(_nui, data)
             local netId = selectedNetId()
+            if nil == netId then
+                return
+            end
 
-            if nil ~= netId and NetworkDoesNetworkIdExist(netId) then
-                local coords = GetEntityCoords(NetToVeh(netId))
+            local vehicle = NetToVeh(netId)
+            local coords = nil
+
+            if NetworkDoesNetworkIdExist(netId) and DoesEntityExist(vehicle) then
+                coords = GetEntityCoords(vehicle)
+            else
+                local cached = remoteStateCache[netId]
+                if nil ~= cached then
+                    coords = cached.coords
+                end
+            end
+
+            if nil ~= coords then
                 SetNewWaypoint(coords.x, coords.y)
-
                 notify("Waypoint set to bait car")
+            else
+                notify("Unable to locate bait car")
             end
         end,
 
