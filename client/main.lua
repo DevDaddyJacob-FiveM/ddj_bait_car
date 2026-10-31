@@ -1,3 +1,12 @@
+localInstallerId = nil
+
+Citizen.CreateThread(function()
+    rpc.invoke("DevJacob:BaitCar:Server:GetInstallerId", function(installerId)
+        localInstallerId = installerId
+    end)
+end)
+
+
 local function applyBaitCarEffects(vehicle)
     if not isBaitCar(vehicle) then
         return

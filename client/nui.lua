@@ -14,12 +14,20 @@ local function mergeDiscoveredCars(cars)
         local entry = discovered[i]
 
         if not seen[entry.netId] then
-            cars[#cars + 1] = {
-                netId = entry.netId,
-                model = entry.model,
-                plate = entry.plate,
-            }
-            seen[entry.netId] = true
+            local state = getBaitCarState(NetToVeh(entry.netId))
+
+            if
+                nil ~= state
+                and nil ~= localInstallerId
+                and state.installedBy == localInstallerId
+            then
+                cars[#cars + 1] = {
+                    netId = entry.netId,
+                    model = entry.model,
+                    plate = entry.plate,
+                }
+                seen[entry.netId] = true
+            end
         end
     end
 

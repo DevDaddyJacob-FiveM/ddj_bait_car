@@ -27,6 +27,18 @@ local function notify(source, kind, message)
 end
 
 
+local function resolveInstallerId(source)
+    local src = tostring(source)
+
+    local license = GetPlayerIdentifierByType(src, "license")
+    if nil ~= license then
+        return license
+    end
+    
+    return "source:" .. src
+end
+
+
 RegisterNetEvent("DevJacob:BaitCar:Server:Install", function(vehNetId)
     local source = source
 
@@ -45,6 +57,7 @@ RegisterNetEvent("DevJacob:BaitCar:Server:Install", function(vehNetId)
         installed = true,
         engineDisabled = false,
         doorsLocked = false,
+        installedBy = resolveInstallerId(source),
     })
 
     logger:info("player %d installed bait car gear on net id %d", source, vehNetId)
@@ -89,6 +102,7 @@ RegisterNetEvent("DevJacob:BaitCar:Server:SetControl", function(vehNetId, contro
         installed = true,
         engineDisabled = state.engineDisabled,
         doorsLocked = state.doorsLocked,
+        installedBy = state.installedBy,
     }
 
     if "power" == control then
@@ -124,6 +138,16 @@ rpc.register("DevJacob:BaitCar:Server:GetState", function(source, cb, vehNetId)
 
     local coords = GetEntityCoords(entity)
     cb(getState(entity), { x = coords.x, y = coords.y, z = coords.z })
+end)
+
+
+--[[
+    Lets a client resolve the same stable id used in `installedBy`, so it
+    can tell which bait cars on the map are its own without the server
+    having to share every player's id with everyone.
+]]
+rpc.register("DevJacob:BaitCar:Server:GetInstallerId", function(source, cb)
+    cb(resolveInstallerId(source))
 end)
 
 
