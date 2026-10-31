@@ -5,7 +5,7 @@ use_experimental_fxv2_oal "yes"
 
 author "DevDaddyJacob"
 description "A FiveM script to add bait car equipment to your vehicles"
-version "0.1.1"
+version "0.1.2"
 
 dependencies {
 	"ddj_lib", -- version >= 1.2.0
@@ -26,6 +26,7 @@ shared_scripts {
 }
 
 client_scripts {
+	"client/hooks/actions.lua",
 	"client/utils.lua",
 	"client/nui.lua",
 	"client/main.lua",

@@ -58,6 +58,8 @@ function nui:open()
     SendNUIMessage({ action = "open" })
 
     updateRemote()
+
+    onClientRemoteOpen()
 end
 
 function nui:close()
@@ -67,6 +69,8 @@ function nui:close()
 
     SetNuiFocus(false, false)
     SendNUIMessage({ action = "close" })
+
+    onClientRemoteClose()
 end
 
 function nui:empty()
@@ -224,8 +228,10 @@ RegisterNUICallback("baitcar:action", function(data, cb)
             local current = false
             if "power" == data.action then
                 current = nil ~= state and true == state.engineDisabled
+                onClientPowerBaitCar(netId, not current)
             else
                 current = nil ~= state and true == state.doorsLocked
+                onClientLockBaitCar(netId, not current)
             end
 
             -- The button name doubles as the control name ("power" / "doors").
@@ -242,6 +248,14 @@ RegisterNUICallback("baitcar:action", function(data, cb)
         local netId = selectedNetId()
 
         if nil ~= netId then
+            if "flash" == data.action then
+                onClientFlashLightsBaitCar(netId)
+            end
+            
+            if "alarm" == data.action then
+                onClientTripAlarmBaitCar(netId)
+            end
+
             TriggerServerEvent(
                 "DevJacob:BaitCar:Server:Momentary",
                 netId,
@@ -303,6 +317,8 @@ RegisterNUICallback("baitcar:action", function(data, cb)
             else
                 notify("Unable to locate bait car")
             end
+
+            onClientLocateBaitCar(netId, coords)
         end,
 
         ["power"] = controlFunc,
