@@ -247,6 +247,10 @@ exports("areDoorsLocked", function(vehicle)
     return areDoorsLocked(vehicle)
 end)
 
+exports("isLockedBaitCar", function(vehicle)
+    return isBaitCar(vehicle) and areDoorsLocked(vehicle)
+end)
+
 exports("getBaitCarState", function(vehicle)
     return getBaitCarState(vehicle)
 end)

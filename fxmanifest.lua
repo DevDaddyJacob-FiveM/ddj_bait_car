@@ -5,7 +5,7 @@ use_experimental_fxv2_oal "yes"
 
 author "DevDaddyJacob"
 description "A FiveM script to add bait car equipment to your vehicles"
-version "1.0.0"
+version "1.1.0"
 
 dependencies {
 	"ddj_lib", -- version >= 1.2.0
