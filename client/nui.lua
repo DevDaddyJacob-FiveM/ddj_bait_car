@@ -313,9 +313,9 @@ RegisterNUICallback("baitcar:action", function(data, cb)
 
             if nil ~= coords then
                 SetNewWaypoint(coords.x, coords.y)
-                notify("Waypoint set to bait car")
+                displayNotification("success", "Waypoint set to bait car")
             else
-                notify("Unable to locate bait car")
+                displayNotification("error", "Unable to locate bait car")
             end
 
             onClientLocateBaitCar(netId, coords)

@@ -40,13 +40,28 @@ local function applyBaitCarEffects(vehicle)
 end
 
 
-AddStateBagChangeHandler("baitCar", nil, function(bagName, _key, _value, _reserved, _replicated)
+local function removeBaitCarEffects(vehicle)
+    -- Only the entity owner may reliably mutate it.
+    if NetworkGetEntityOwner(vehicle) ~= PlayerId() then
+        return
+    end
+
+    SetVehicleUndriveable(vehicle, false)
+    SetVehicleDoorsLocked(vehicle, 0)
+end
+
+
+AddStateBagChangeHandler("baitCar", nil, function(bagName, _key, value, _reserved, _replicated)
     local vehicle = GetEntityFromStateBagName(bagName)
     if 0 == vehicle then
         return
     end
 
-    applyBaitCarEffects(vehicle)
+    if nil == value then
+        removeBaitCarEffects(vehicle)
+    else
+        applyBaitCarEffects(vehicle)
+    end
 
     if nui.isOpen then
         updateRemote()
@@ -69,25 +84,25 @@ end)
 -- Blocks exiting (including bailing out) and being dragged out of a bait
 -- car while its doors are locked. Must poll every frame since disabled
 -- controls only hold for the current tick.
-Citizen.CreateThread(function()
-    while true do
-        if false == Config["PreventExitWhenLocked"] then
-            Citizen.Wait(500)
-        else
+if true == Config["PreventExitWhenLocked"] then
+    Citizen.CreateThread(function()
+        while true do
             Citizen.Wait(0)
 
             local ped = PlayerPedId()
             local vehicle = GetVehiclePedIsIn(ped, false)
-            local shouldBlock = 0 ~= vehicle and isBaitCar(vehicle) and areDoorsLocked(vehicle)
+            local shouldBlock = 0 ~= vehicle
+                and isBaitCar(vehicle)
+                and areDoorsLocked(vehicle)
 
             SetPedCanBeDraggedOut(ped, not shouldBlock)
 
             if shouldBlock then
-                DisableControlAction(0, 75, true) -- INPUT_VEH_EXIT
+                DisableControlAction(0, ControlInputs["INPUT_VEH_EXIT"], true)
             end
         end
-    end
-end)
+    end)
+end
 
 
 RegisterNetEvent("DevJacob:BaitCar:Client:Momentary", function(vehNetId, action)
@@ -124,8 +139,8 @@ RegisterNetEvent("DevJacob:BaitCar:Client:Momentary", function(vehNetId, action)
 end)
 
 
-RegisterNetEvent("DevJacob:BaitCar:Client:Notify", function(_kind, message)
-    notify(message)
+RegisterNetEvent("DevJacob:BaitCar:Client:Notify", function(variant, message)
+    displayNotification(variant, message)
 end)
 
 
@@ -158,12 +173,18 @@ local function baitcarUninstallCommand()
     local vehicle = resolveGearTarget()
 
     if 0 == vehicle or not DoesEntityExist(vehicle) then
-        notify("No vehicle nearby to remove the bait car gear from")
+        displayNotification(
+            "error",
+            "No vehicle nearby to remove the bait car gear from"
+        )
         return
     end
 
     if not isBaitCar(vehicle) then
-        notify("This vehicle does not have bait car gear installed")
+        displayNotification(
+            "error",
+            "This vehicle does not have bait car gear installed"
+        )
         return
     end
 
@@ -175,12 +196,18 @@ local function baitcarInstallCommand()
     local vehicle = resolveGearTarget()
 
     if 0 == vehicle or not DoesEntityExist(vehicle) then
-        notify("No vehicle nearby to install the bait car gear on")
+        displayNotification(
+            "error",
+            "No vehicle nearby to install the bait car gear on"
+        )
         return
     end
 
     if isBaitCar(vehicle) then
-        notify("This vehicle already has bait car gear installed")
+        displayNotification(
+            "error",
+            "This vehicle already has bait car gear installed"
+        )
         return
     end
 

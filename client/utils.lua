@@ -115,13 +115,3 @@ function collectBaitCars()
 
     return result
 end
-
-
---[[
-    Shows a short notification in the top left feed.
-]]
-function notify(message)
-    BeginTextCommandThefeedPost("STRING")
-    AddTextComponentSubstringPlayerName(message)
-    EndTextCommandThefeedPostTicker(false, true)
-end

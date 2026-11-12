@@ -3,6 +3,9 @@
     events occur, the idea of this file is that server owners / developers can
     add custom code in here to allow them to customize other reactions when
     these events occur such as logging etc.
+    
+    Hook files are not frequently edited with updates which aims to make
+    updating your resource with integrations easier.
 ]]
 
 --- This function runs whenever the client opens the bait car remote
